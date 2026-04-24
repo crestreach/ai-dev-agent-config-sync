@@ -10,7 +10,7 @@
   Project root where tool-specific files are written. Each
   sync-agent-guidelines run copies AGENTS.md when input≠output.
 .PARAMETER Tools
-  Comma-separated list. Default: cursor,claude,copilot,junie
+  Comma-separated list. Default: cursor,claude,copilot,vscode,junie
 .PARAMETER Items
   Comma-separated list forwarded to agents, skills, and rules (ignored by
   sync-agent-guidelines and by no-op rules scripts for Claude and Junie)
@@ -30,7 +30,7 @@ param(
   [string]$InputRoot,
   [Parameter(Mandatory)]
   [string]$OutputRoot,
-  [string]$Tools = 'cursor,claude,copilot,junie',
+  [string]$Tools = 'cursor,claude,copilot,vscode,junie',
   [string]$Items = '',
   [switch]$Clean
 )
@@ -59,6 +59,10 @@ foreach ($tool in $toolList) {
   Write-Host "== $tool =="
   & (Join-Path $dir 'sync-agents.ps1') -InputPath (Join-Path $inputBase 'agents') -OutputPath $outputBase @itemArgs @cleanArgs
   & (Join-Path $dir 'sync-skills.ps1') -InputPath (Join-Path $inputBase 'skills') -OutputPath $outputBase @itemArgs @cleanArgs
+  $mcpSrc = Join-Path $inputBase 'mcp-servers'
+  if (Test-Path -LiteralPath $mcpSrc -PathType Container) {
+    & (Join-Path $dir 'sync-mcp.ps1') -InputPath $mcpSrc -OutputPath $outputBase @itemArgs @cleanArgs
+  }
   & (Join-Path $dir 'sync-agent-guidelines.ps1') -InputPath $inputBase -OutputPath $outputBase @cleanArgs
   & (Join-Path $dir 'sync-rules.ps1') -InputPath (Join-Path $inputBase 'rules') -OutputPath $outputBase @itemArgs @cleanArgs
 }

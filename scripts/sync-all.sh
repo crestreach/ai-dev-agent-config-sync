@@ -3,7 +3,7 @@
 # tree (agents/, rules/, skills/, AGENTS.md) and one output project root.
 #
 # Usage:
-#   sync-all.sh -i <source_root> -o <output_root> [--tools cursor,claude,copilot,junie] [--items a,b,c] [--clean]
+#   sync-all.sh -i <source_root> -o <output_root> [--tools cursor,claude,copilot,vscode,junie] [--items a,b,c] [--clean]
 #
 #   <source_root>  Directory containing: agents/, rules/, skills/, AGENTS.md
 #   <output_root>  Project root where tool-specific files are written (.cursor, …)
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOLS="cursor,claude,copilot,junie"
+TOOLS="cursor,claude,copilot,vscode,junie"
 ITEMS=""
 INPUT_BASE=""
 OUTPUT_BASE=""
@@ -89,6 +89,9 @@ for tool in "${TOOL_LIST[@]}"; do
   echo "== $tool =="
   run_sync "$dir/sync-agents.sh"      -i "$INPUT_BASE/agents"   -o "$OUTPUT_BASE"
   run_sync "$dir/sync-skills.sh"      -i "$INPUT_BASE/skills"  -o "$OUTPUT_BASE"
+  if [[ -d "$INPUT_BASE/mcp-servers" ]]; then
+    run_sync "$dir/sync-mcp.sh"       -i "$INPUT_BASE/mcp-servers" -o "$OUTPUT_BASE"
+  fi
   run_sync "$dir/sync-agent-guidelines.sh" -i "$INPUT_BASE" -o "$OUTPUT_BASE"
   run_sync "$dir/sync-rules.sh"       -i "$INPUT_BASE/rules" -o "$OUTPUT_BASE"
 done

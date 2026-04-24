@@ -25,26 +25,21 @@ INPUT_BASE=""
 OUTPUT_BASE=""
 SYNC_ALL_CLEAN=false
 
+_print_usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; }
+_require_value() {
+  local flag="$1" argc="$2"
+  if [[ "$argc" -lt 2 ]]; then echo "Error: $flag requires a value." >&2; echo >&2; _print_usage >&2; exit 2; fi
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -i|--input)
-      if [[ $# -lt 2 ]]; then echo "Error: $1 requires a value." >&2; echo >&2; sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; fi
-      INPUT_BASE="$2"; shift 2;;
-    -o|--output)
-      if [[ $# -lt 2 ]]; then echo "Error: $1 requires a value." >&2; echo >&2; sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; fi
-      OUTPUT_BASE="$2"; shift 2;;
-    --tools)
-      if [[ $# -lt 2 ]]; then echo "Error: $1 requires a value." >&2; echo >&2; sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; fi
-      TOOLS="$2"; shift 2;;
-    --items)
-      if [[ $# -lt 2 ]]; then echo "Error: $1 requires a value." >&2; echo >&2; sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; fi
-      ITEMS="$2"; shift 2;;
+    -i|--input)  _require_value "$1" "$#"; INPUT_BASE="$2"; shift 2;;
+    -o|--output) _require_value "$1" "$#"; OUTPUT_BASE="$2"; shift 2;;
+    --tools)     _require_value "$1" "$#"; TOOLS="$2"; shift 2;;
+    --items)     _require_value "$1" "$#"; ITEMS="$2"; shift 2;;
     --clean)     SYNC_ALL_CLEAN=true; shift;;
-    -h|--help)
-      sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
-      exit 0
-      ;;
-    *) echo "Unknown arg: $1" >&2; echo >&2; sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2;;
+    -h|--help)   _print_usage; exit 0;;
+    *) echo "Unknown arg: $1" >&2; echo >&2; _print_usage >&2; exit 2;;
   esac
 done
 

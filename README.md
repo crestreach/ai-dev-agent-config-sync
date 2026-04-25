@@ -29,7 +29,7 @@ This repo is based on **vendor-documented behavior** for Cursor, Claude Code, Gi
 
 You provide a **source root** directory to `sync-all` (or call per-tool scripts
 directly). Only `AGENTS.md` is required; every subfolder is **optional** and
-the corresponding sync step is silently skipped when its folder is absent.
+the corresponding sync step is skipped with a console note when its folder is absent.
 
 | Path (relative to your source root) | Required | Meaning |
 |---|---|---|

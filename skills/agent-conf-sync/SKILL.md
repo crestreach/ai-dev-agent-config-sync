@@ -9,7 +9,7 @@ This skill invokes **`scripts/sync-all.sh`** (macOS/Linux/Git Bash) or **`script
 
 ## Source tree format (`<source_root>`)
 
-A source root must contain `AGENTS.md`. It may optionally contain any of these folders; each is independent and missing folders are silently skipped:
+A source root must contain `AGENTS.md`. It may optionally contain any of these folders; each is independent and missing folders are skipped with a console note:
 
 | Folder | One per | Purpose |
 |---|---|---|

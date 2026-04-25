@@ -8,7 +8,7 @@
 .PARAMETER InputRoot
   Directory containing AGENTS.md. May optionally contain agents/, skills/,
   rules/, and mcp-servers/. Subscripts whose source dir is missing are
-  skipped silently with a console note.
+  skipped with a console note.
 .PARAMETER OutputRoot
   Project root where tool-specific files are written. Each
   sync-agent-guidelines run copies AGENTS.md when input≠output.

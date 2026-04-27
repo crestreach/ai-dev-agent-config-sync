@@ -114,6 +114,8 @@ run_install() {
   [[ "$output" == *"Install or update cyncia"* ]]
   [[ "$output" == *"--config-dir"* ]]
   [[ "$output" == *"--bootstrap"* ]]
+  # Help reflects the yes-by-default behavior.
+  [[ "$output" == *"default when there is no TTY"* ]]
 }
 
 @test "install: rejects unknown option" {
@@ -347,6 +349,29 @@ EOF
 
   [ "$status" -eq 0 ]
   # sync-all generated tool layouts somewhere under TEST_HOME.
+  [ -f "$TEST_HOME/AGENTS.md" ] || [ -f "$TEST_HOME/CLAUDE.md" ] || [ -d "$TEST_HOME/.cursor" ]
+}
+
+@test "install: defaults to yes when no flag is given and there is no TTY" {
+  command -v perl >/dev/null 2>&1 || skip "perl not available for setsid"
+  build_real_tarball "$TEST_HOME/snap.tgz" "DEFY"
+  export FAKE_TARBALL="$TEST_HOME/snap.tgz"
+
+  cd "$TEST_HOME"
+  # Detach from any controlling terminal via setsid so /dev/tty is unreadable;
+  # this exercises install.sh's no-TTY branch which now defaults to "yes".
+  run env CYNCIA_REPO="" CYNCIA_REF="" \
+      perl -e 'use POSIX qw(setsid); setsid(); exec { $ARGV[0] } @ARGV' \
+      bash "$INSTALL_SH"
+
+  [ "$status" -eq 0 ]
+  # Default-yes should have copied the bundled skill into config/skills/.
+  [ -f "$TEST_HOME/.agent-config/skills/sample-skill/SKILL.md" ]
+  grep -q "DEFY" "$TEST_HOME/.agent-config/skills/sample-skill/SKILL.md"
+  # And the no-TTY branch should have announced the default explicitly.
+  [[ "$output" == *"(no TTY)"* ]]
+  [[ "$output" == *"-> yes"* ]]
+  # sync-all also defaulted to running -> tool outputs exist.
   [ -f "$TEST_HOME/AGENTS.md" ] || [ -f "$TEST_HOME/CLAUDE.md" ] || [ -d "$TEST_HOME/.cursor" ]
 }
 

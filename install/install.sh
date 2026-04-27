@@ -70,7 +70,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for cmd in curl tar mktemp find; do
+for cmd in curl tar mktemp find awk; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "error: required command not found: $cmd" >&2
     exit 1
@@ -169,6 +169,73 @@ if [[ "$CYNCIA_EXISTED" == "yes" ]]; then
 else
   echo "    wrote $CYNCIA_DIR/{scripts,skills,examples,README.md,cyncia.md}"
 fi
+
+# --- 2b. Record installed version -------------------------------------------
+#
+# Write $CYNCIA_DIR/VERSION with the ref that was installed. When the ref is
+# the default branch ("main"), best-effort query the GitHub API for tags
+# pointing at HEAD; if any are found, list those instead. The lookup is
+# allowed to fail silently (offline / rate-limited / private repo): on any
+# failure we fall back to the literal ref.
+
+# Extract the first top-level "sha" string from a GitHub commit JSON payload.
+# (GitHub returns the commit SHA as the first "sha" field; nested "sha"
+# fields under "tree"/"parents"/"author" come later.)
+extract_first_sha() {
+  awk '
+    match($0, /"sha"[[:space:]]*:[[:space:]]*"[0-9a-f]+"/) {
+      s = substr($0, RSTART, RLENGTH)
+      sub(/^"sha"[[:space:]]*:[[:space:]]*"/, "", s)
+      sub(/"$/, "", s)
+      print s
+      exit
+    }
+  '
+}
+
+# Print tag names (one per line) whose commit.sha equals $1, parsed from the
+# /repos/OWNER/NAME/tags JSON payload on stdin.
+extract_tags_for_sha() {
+  awk -v target="$1" '
+    BEGIN { RS = "}" }
+    {
+      name = ""; commit_sha = ""
+      if (match($0, /"name"[[:space:]]*:[[:space:]]*"[^"]*"/)) {
+        s = substr($0, RSTART, RLENGTH)
+        sub(/^"name"[[:space:]]*:[[:space:]]*"/, "", s)
+        sub(/"$/, "", s)
+        name = s
+      }
+      if (match($0, /"sha"[[:space:]]*:[[:space:]]*"[0-9a-f]+"/)) {
+        s = substr($0, RSTART, RLENGTH)
+        sub(/^"sha"[[:space:]]*:[[:space:]]*"/, "", s)
+        sub(/"$/, "", s)
+        commit_sha = s
+      }
+      if (name != "" && commit_sha == target) print name
+    }
+  '
+}
+
+VERSION_TEXT="$REF"
+if [[ "$REF" == "main" ]]; then
+  api_sha="$(curl -fsSL -H 'Accept: application/vnd.github+json' \
+              "https://api.github.com/repos/${REPO}/commits/${REF}" 2>/dev/null \
+              | extract_first_sha 2>/dev/null || true)"
+  if [[ -n "${api_sha:-}" ]]; then
+    api_tags="$(curl -fsSL -H 'Accept: application/vnd.github+json' \
+                  "https://api.github.com/repos/${REPO}/tags?per_page=100" 2>/dev/null \
+                  | extract_tags_for_sha "$api_sha" 2>/dev/null || true)"
+    if [[ -n "${api_tags:-}" ]]; then
+      VERSION_TEXT="$api_tags"
+    fi
+  fi
+fi
+printf '%s\n' "$VERSION_TEXT" > "$CYNCIA_DIR/VERSION"
+echo "    wrote $CYNCIA_DIR/VERSION:"
+while IFS= read -r _line; do
+  [[ -n "$_line" ]] && echo "      $_line"
+done <<<"$VERSION_TEXT"
 
 # --- 3. Skills bootstrap (copy / update <config-dir>/skills) -----------------
 

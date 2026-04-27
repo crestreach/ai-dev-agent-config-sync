@@ -425,15 +425,21 @@ In order, the script:
    `skills/`, and `examples/` trees in `<cyncia-dir>/` are removed first so
    deletions upstream propagate; `README.md` and `cyncia.md` are overwritten
    in place.
-3. **Optionally copies bundled skills** from `<cyncia-dir>/skills/` into
+3. **Records the installed version** to `<cyncia-dir>/VERSION`. For an
+   explicit `--ref` (tag or non-default branch) the file contains that ref
+   verbatim. For the default `main` branch the installer best-effort queries
+   the GitHub API for tags pointing at `HEAD`; if any are found, those tag
+   names are written (one per line). On API failure or when no tags match,
+   the file falls back to `main`.
+4. **Optionally copies bundled skills** from `<cyncia-dir>/skills/` into
    `<config-dir>/skills/`. Skills are split into two prompts: missing-here
    skills (offered as a copy) and already-present skills (offered as an
    overwrite-with-upstream).
-4. **Optionally runs `sync-all`**:
+5. **Optionally runs `sync-all`**:
    `bash <cyncia-dir>/scripts/sync-all.sh -i <config-dir> -o .`
-5. **Prints a `jq` notice** (only required by the MCP sync step) with
+6. **Prints a `jq` notice** (only required by the MCP sync step) with
    per-OS install commands.
-6. **Prints the "After installing" section** read directly from the freshly
+7. **Prints the "After installing" section** read directly from the freshly
    downloaded `<cyncia-dir>/README.md`, so the post-install guidance stays
    in sync with the upstream docs.
 

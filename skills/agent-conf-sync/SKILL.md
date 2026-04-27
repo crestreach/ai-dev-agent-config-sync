@@ -78,7 +78,7 @@ The directory that contains `AGENTS.md` and optionally any of `agents/`, `skills
 
 Mapping from user phrasing:
 
-- "from `_internal`", "internal tree", "authoring root", "this repo's own source" → `<CONFIG_SYNC_ROOT>/_internal`
+- "from `.agent-config`", "internal tree", "authoring root", "this repo's own source" → `<CONFIG_SYNC_ROOT>/.agent-config`
 - "from examples", "the examples tree" → `<CONFIG_SYNC_ROOT>/examples`
 - "from my source", "from `<path>`" → that path
 - "in place", "same as output" → same path as output root

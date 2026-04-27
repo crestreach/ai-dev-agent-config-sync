@@ -10,7 +10,7 @@
 #
 # Examples:
 #   sync-agent-guidelines.sh -i "$PWD/examples" -o "$PWD"
-#   sync-agent-guidelines.sh -i "$PWD/_internal" -o "$PWD"
+#   sync-agent-guidelines.sh -i "$PWD/.agent-config" -o "$PWD"
 
 COMMON="$(cd "$(dirname "${BASH_SOURCE[0]}")/../common" && pwd)/common.sh"
 source "$COMMON"

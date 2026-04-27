@@ -25,7 +25,7 @@
 .EXAMPLE
   .\sync-all.ps1 -InputRoot "$PWD\examples" -OutputRoot "$PWD" -Tools cursor,claude -Items delegate-to-aside
 .EXAMPLE
-  .\sync-all.ps1 -InputRoot "$PWD\_internal" -OutputRoot $PWD -Clean
+  .\sync-all.ps1 -InputRoot "$PWD\.agent-config" -OutputRoot $PWD -Clean
 #>
 [CmdletBinding()]
 param(

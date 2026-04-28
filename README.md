@@ -2,6 +2,8 @@
 
 **Author your AI-assistant config once, sync it to every tool.**
 
+Website: <https://www.cyncia.net>
+
 Cyncia takes a single, tool-agnostic source tree (guidelines, agents, skills,
 rules, MCP servers) and generates the per-tool layouts that
 **Cursor**, **Claude Code**, **GitHub Copilot**, **VS Code**, and

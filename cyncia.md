@@ -1,5 +1,7 @@
 # cyncia
 
+Website: <https://www.cyncia.net>
+
 Tool-agnostic source of truth for AI coding-assistant configuration —
 **agents**, **skills**, **rules/guidelines**, a top-level **`AGENTS.md`**, and
 **MCP servers** — plus sync scripts that generate tool-specific files for

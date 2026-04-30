@@ -236,6 +236,54 @@ function global:Copy-WithFrontmatterEdit {
   }
 }
 
+function global:Get-CyncyaConfValue {
+  <#
+  .SYNOPSIS
+    Read a scalar value from the cyncia config file (a tiny flat YAML).
+  .DESCRIPTION
+    Search order:
+      1. $env:CYNCIA_CONF (if set and the file exists)
+      2. <scripts_parent>/cyncia.conf  (i.e. .cyncia/cyncia.conf when scripts
+         live at .cyncia/scripts/common/)
+    Recognized lines have the form "key: value". Comments (#...) and blank
+    lines are ignored. Surrounding single/double quotes are stripped.
+    When the key is missing, returns -Default (default '').
+  #>
+  param(
+    [Parameter(Mandatory = $true)][string]$Key,
+    [string]$Default = ''
+  )
+  $conf = $null
+  if ($env:CYNCIA_CONF -and (Test-Path -LiteralPath $env:CYNCIA_CONF -PathType Leaf)) {
+    $conf = $env:CYNCIA_CONF
+  } else {
+    $commonDir = Split-Path -Parent $PSCommandPath
+    if (-not $commonDir) { $commonDir = $PSScriptRoot }
+    if ($commonDir) {
+      $scriptsDir = Split-Path -Parent $commonDir
+      $cyncyaDir  = Split-Path -Parent $scriptsDir
+      $candidate  = Join-Path $cyncyaDir 'cyncia.conf'
+      if (Test-Path -LiteralPath $candidate -PathType Leaf) { $conf = $candidate }
+    }
+  }
+  if (-not $conf) { return $Default }
+  foreach ($raw in (Get-Content -LiteralPath $conf)) {
+    $line = $raw -replace '#.*$',''
+    $line = $line.Trim()
+    if (-not $line) { continue }
+    $p = $line.IndexOf(':')
+    if ($p -lt 1) { continue }
+    $k = $line.Substring(0, $p).Trim()
+    if ($k -ne $Key) { continue }
+    $v = $line.Substring($p + 1).Trim()
+    $v = $v -replace '^"|"$',''
+    $v = $v -replace "^'|'$",''
+    if ($v) { return $v }
+    return $Default
+  }
+  return $Default
+}
+
 function global:ConvertTo-YamlFlowList {
   <#
     "a, b, c" -> "[a, b, c]". Used for Claude mcpServers.

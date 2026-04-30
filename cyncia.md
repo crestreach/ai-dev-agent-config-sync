@@ -47,7 +47,7 @@ Cyncia generates the per-tool files:
 | `AGENTS.md`             | `AGENTS.md`                          | `CLAUDE.md`                  | `.github/copilot-instructions.md`             | —                   | `.junie/AGENTS.md`             |
 | `agents/<n>.md`         | `.cursor/agents/<n>.md`              | `.claude/agents/<n>.md`      | `.github/agents/<n>.md`                       | —                   | `.junie/agents/<n>.md`         |
 | `skills/<n>/`           | `.cursor/skills/<n>/`                | `.claude/skills/<n>/`        | `.github/skills/<n>/`                         | —                   | `.junie/skills/<n>/`           |
-| `rules/<n>.md`          | `.cursor/rules/<n>.mdc`              | merged into `CLAUDE.md`      | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
+| `rules/<n>.md`          | `.cursor/rules/<n>.mdc`              | merged into `CLAUDE.md` *or* `.claude/rules/<n>.md` (configurable via `cyncia.conf`) | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
 | `mcp-servers/<n>.json`  | `.cursor/mcp.json`                   | `.mcp.json`                  | (uses VS Code's `.vscode/mcp.json`)           | `.vscode/mcp.json`  | stdout snippet                 |
 
 **How each tool picks the generated files up:**
@@ -137,7 +137,7 @@ always-apply: false              # optional; true = always on (overrides applies
 |----------------|------|--------|
 | Cursor | `.cursor/rules/<name>.mdc` | `description`, optional `globs` from `applies-to`, `alwaysApply` from `always-apply` (default `false` if not exactly `true`). |
 | GitHub Copilot | `.github/instructions/<name>.instructions.md` | `applyTo`: `**` if `always-apply: true`; else `applies-to` if set; else `**` (see resolution below). |
-| Claude Code | *(no per-rule file)* | Bodies are merged into `CLAUDE.md` (with `AGENTS.md`) by `sync-agent-guidelines`. |
+| Claude Code | `.claude/rules/<name>.md` *(only when `claude_rules_mode: rule-files` in `cyncia.conf`)* | Default `claude-md` mode merges rule bodies into `CLAUDE.md` via `sync-agent-guidelines`. With `rule-files`, each rule is written to its own file (frontmatter stripped) and referenced from `CLAUDE.md` via Claude Code's `@.claude/rules/<name>.md` memory-import syntax, so it loads with the same priority as `CLAUDE.md`. |
 | Junie | *(no per-rule file)* | Bodies are merged into `.junie/AGENTS.md` via `sync-agent-guidelines`. |
 
 **Copilot `applyTo` resolution** (implemented in `scripts/copilot/sync-rules.{sh,ps1}`):

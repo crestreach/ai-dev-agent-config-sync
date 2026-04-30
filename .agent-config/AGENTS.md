@@ -32,7 +32,7 @@ The sync scripts write tool-specific files under your **output root**:
 
 Notes:
 
-- **Claude rules:** rule bodies are appended into `CLAUDE.md` by `sync-agent-guidelines`.
+- **Claude rules:** with `claude_rules_mode: claude-md` (the default in `cyncia.conf`), rule bodies are appended into `CLAUDE.md` by `sync-agent-guidelines`. With `claude_rules_mode: rule-files`, each rule is written to `.claude/rules/<n>.md` by `sync-rules` and imported from `CLAUDE.md` via `@.claude/rules/<n>.md` memory-imports.
 - **Junie rules:** Junie has no per-rule file format, so rule bodies are appended into `.junie/AGENTS.md` by `sync-agent-guidelines` (and `sync-rules` remains a no-op).
 
 ## Agent configuration management (cyncia)

@@ -33,7 +33,7 @@ Cyncia generates the rest:
 | `AGENTS.md`                  | `AGENTS.md`                        | `CLAUDE.md`                  | `.github/copilot-instructions.md`             | —                   | `.junie/AGENTS.md`             |
 | `agents/<n>.md`              | `.cursor/agents/<n>.md`            | `.claude/agents/<n>.md`      | `.github/agents/<n>.md`                       | —                   | `.junie/agents/<n>.md`         |
 | `skills/<n>/`                | `.cursor/skills/<n>/`              | `.claude/skills/<n>/`        | `.github/skills/<n>/`                         | —                   | `.junie/skills/<n>/`           |
-| `rules/<n>.md`               | `.cursor/rules/<n>.mdc`            | merged into `CLAUDE.md`      | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
+| `rules/<n>.md`               | `.cursor/rules/<n>.mdc`            | merged into `CLAUDE.md` *or* `.claude/rules/<n>.md` (configurable, see `cyncia.conf`) | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
 | `mcp-servers/<n>.json`       | `.cursor/mcp.json`                 | `.mcp.json`                  | (uses VS Code’s `.vscode/mcp.json`)           | `.vscode/mcp.json`  | stdout snippet                 |
 
 Along the way it also rewrites **frontmatter** to each tool's native shape:
@@ -94,6 +94,21 @@ curl -fsSL https://raw.githubusercontent.com/crestreach/cyncia/main/install/inst
 
 Full installer reference (all flags, env vars, behavior on re-run): see
 [`cyncia.md` → Install](cyncia.md#install).
+
+## Configuration (`.cyncia/cyncia.conf`)
+
+The installer creates `.cyncia/cyncia.conf` with sensible defaults and leaves
+it alone on subsequent runs. When a new version of cyncia introduces a new
+property the installer prompts you to add it (default **yes**); when a
+property is no longer supported it prompts to remove it (default **no**).
+
+Currently supported properties:
+
+| Key | Default | Values | Effect |
+|---|---|---|---|
+| `claude_rules_mode` | `claude-md` | `claude-md`, `rule-files` | How `rules/<n>.md` is emitted for Claude Code. `claude-md` merges every rule body into `CLAUDE.md` (the previous behavior). `rule-files` writes each rule to `.claude/rules/<n>.md` and references it from `CLAUDE.md` via Claude Code's `@`-import syntax (`@.claude/rules/<n>.md`), so each rule is loaded by Claude Code with the same priority as `CLAUDE.md`. |
+
+If the file or a property is missing, sync scripts use the built-in default.
 
 ## After installing
 

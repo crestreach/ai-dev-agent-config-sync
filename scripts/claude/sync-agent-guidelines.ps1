@@ -48,7 +48,7 @@ if ($Clean -and (Test-Path -LiteralPath $dst -PathType Leaf)) {
 }
 $rulesDir = Join-Path $srcRoot 'rules'
 
-$mode = Get-CyncyaConfValue -Key 'claude_rules_mode' -Default 'claude-md'
+$mode = Get-CynciaConfValue -Key 'claude_rules_mode' -Default 'claude-md'
 if ($mode -ne 'claude-md' -and $mode -ne 'rule-files') {
   Write-Warning "claude agent-guidelines: unknown claude_rules_mode='$mode' (valid: claude-md, rule-files); falling back to claude-md"
   $mode = 'claude-md'

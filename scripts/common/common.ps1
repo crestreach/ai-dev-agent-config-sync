@@ -236,7 +236,7 @@ function global:Copy-WithFrontmatterEdit {
   }
 }
 
-function global:Get-CyncyaConfValue {
+function global:Get-CynciaConfValue {
   <#
   .SYNOPSIS
     Read a scalar value from the cyncia config file (a tiny flat YAML).
@@ -261,8 +261,8 @@ function global:Get-CyncyaConfValue {
     if (-not $commonDir) { $commonDir = $PSScriptRoot }
     if ($commonDir) {
       $scriptsDir = Split-Path -Parent $commonDir
-      $cyncyaDir  = Split-Path -Parent $scriptsDir
-      $candidate  = Join-Path $cyncyaDir 'cyncia.conf'
+      $cynciaConfDir  = Split-Path -Parent $scriptsDir
+      $candidate  = Join-Path $cynciaConfDir 'cyncia.conf'
       if (Test-Path -LiteralPath $candidate -PathType Leaf) { $conf = $candidate }
     }
   }

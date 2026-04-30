@@ -33,7 +33,7 @@ param(
 $inputDir  = Resolve-AbsoluteDirectory -Path $InputPath
 $outputDir = Resolve-AbsoluteDirectory -Path $OutputPath
 
-$mode = Get-CyncyaConfValue -Key 'claude_rules_mode' -Default 'claude-md'
+$mode = Get-CynciaConfValue -Key 'claude_rules_mode' -Default 'claude-md'
 if ($mode -ne 'claude-md' -and $mode -ne 'rule-files') {
   Write-Warning "claude rules: unknown claude_rules_mode='$mode' (valid: claude-md, rule-files); falling back to claude-md"
   $mode = 'claude-md'

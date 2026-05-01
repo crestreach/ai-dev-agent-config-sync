@@ -47,7 +47,7 @@ Cyncia generates the per-tool files:
 | `AGENTS.md`             | `AGENTS.md`                          | `CLAUDE.md`                  | `.github/copilot-instructions.md`             | —                   | `.junie/AGENTS.md`             |
 | `agents/<n>.md`         | `.cursor/agents/<n>.md`              | `.claude/agents/<n>.md`      | `.github/agents/<n>.md`                       | —                   | `.junie/agents/<n>.md`         |
 | `skills/<n>/`           | `.cursor/skills/<n>/`                | `.claude/skills/<n>/`        | `.github/skills/<n>/`                         | —                   | `.junie/skills/<n>/`           |
-| `rules/<n>.md`          | `.cursor/rules/<n>.mdc`              | merged into `CLAUDE.md`      | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
+| `rules/<n>.md`          | `.cursor/rules/<n>.mdc`              | merged into `CLAUDE.md` *or* `.claude/rules/<n>.md` (configurable via `cyncia.conf`) | `.github/instructions/<n>.instructions.md`    | —                   | merged into `.junie/AGENTS.md` |
 | `mcp-servers/<n>.json`  | `.cursor/mcp.json`                   | `.mcp.json`                  | (uses VS Code's `.vscode/mcp.json`)           | `.vscode/mcp.json`  | stdout snippet                 |
 
 **How each tool picks the generated files up:**
@@ -137,7 +137,7 @@ always-apply: false              # optional; true = always on (overrides applies
 |----------------|------|--------|
 | Cursor | `.cursor/rules/<name>.mdc` | `description`, optional `globs` from `applies-to`, `alwaysApply` from `always-apply` (default `false` if not exactly `true`). |
 | GitHub Copilot | `.github/instructions/<name>.instructions.md` | `applyTo`: `**` if `always-apply: true`; else `applies-to` if set; else `**` (see resolution below). |
-| Claude Code | *(no per-rule file)* | Bodies are merged into `CLAUDE.md` (with `AGENTS.md`) by `sync-agent-guidelines`. |
+| Claude Code | `.claude/rules/<name>.md` *(only when `claude_rules_mode: rule-files` in `cyncia.conf`)* | Default `claude-md` mode merges rule bodies into `CLAUDE.md` via `sync-agent-guidelines`. With `rule-files`, each rule is written to its own file (frontmatter stripped) and referenced from `CLAUDE.md` via Claude Code's `@.claude/rules/<name>.md` memory-import syntax, so it loads with the same priority as `CLAUDE.md`. |
 | Junie | *(no per-rule file)* | Bodies are merged into `.junie/AGENTS.md` via `sync-agent-guidelines`. |
 
 **Copilot `applyTo` resolution** (implemented in `scripts/copilot/sync-rules.{sh,ps1}`):
@@ -573,6 +573,45 @@ read [`.cyncia/README.md`](./.cyncia/README.md) for the source-tree format (fron
 Then either **commit the generated** `.cursor/`, `.github/`, `.claude/`,
 `.junie/`, `AGENTS.md`, and `CLAUDE.md` so the team gets them without running
 scripts, **or** document that everyone must run `sync-all` after pulling.
+
+## Configuration (`.cyncia/cyncia.conf`)
+
+The installer creates `.cyncia/cyncia.conf` with sensible defaults and leaves
+it alone on subsequent runs. When a new version of cyncia introduces a new
+property the installer prompts you to add it (default **yes**); when a
+property is no longer supported it prompts to remove it (default **no**). User
+comments and unrelated content are preserved across reconciliation.
+
+The file is a tiny flat YAML — one `key: value` pair per line, plus comments
+and blank lines. Sync scripts read it via the helpers `read_cyncia_conf`
+(Bash, `scripts/common/common.sh`) and `Get-CynciaConfValue` (PowerShell,
+`scripts/common/common.ps1`). Search order:
+
+1. `$CYNCIA_CONF` (if set and the file exists) — used by the test suites and
+   for ad-hoc overrides.
+2. `<scripts_parent>/../cyncia.conf` — i.e. `.cyncia/cyncia.conf` in the
+   canonical installed layout (where the scripts live at
+   `.cyncia/scripts/...`), or `<repo>/cyncia.conf` in the repo-clone layout
+   used by this project's own self-tests.
+
+If the file or a property is missing, sync scripts use the built-in default
+(no behavior change for projects that pre-date the property).
+
+Currently supported properties:
+
+| Key | Default | Values | Effect |
+|---|---|---|---|
+| `claude_rules_mode` | `claude-md` | `claude-md`, `rule-files` | How `rules/<n>.md` is emitted for Claude Code. `claude-md` merges every rule body into `CLAUDE.md` (the previous behavior; `scripts/claude/sync-rules.{sh,ps1}` is a no-op). `rule-files` writes each rule to `.claude/rules/<n>.md` (frontmatter stripped) and references it from `CLAUDE.md` via Claude Code's `@`-import syntax (`@.claude/rules/<n>.md`), so each rule is loaded by Claude Code with the same priority as `CLAUDE.md`. Unknown values fall back to `claude-md` with a warning. |
+
+Example:
+
+```yaml
+# How rules/<name>.md is emitted for Claude Code: 'claude-md' merges rule
+# bodies into CLAUDE.md (default); 'rule-files' writes one file per rule to
+# .claude/rules/<name>.md and imports them from CLAUDE.md via @-imports so
+# Claude loads them with the same priority as CLAUDE.md.
+claude_rules_mode: claude-md
+```
 
 ## License
 

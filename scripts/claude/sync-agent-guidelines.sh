@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Write <output_root>/CLAUDE.md from <source_root>/AGENTS.md plus each
-# <source_root>/rules/<name>.md (Claude has no native per-rule files; rule
-# bodies are appended here, grouped by source file).
+# <source_root>/rules/<name>.md.
 #
-# Skips rules/*.md with basename README. Frontmatter is stripped from rule files; optional
-# `description` from frontmatter is shown as an italic line under each heading.
+# Two emission modes are supported, selected by the `claude_rules_mode` key
+# in `<cyncia-dir>/cyncia.conf` (default: `claude-md`):
+#
+#   claude-md    Append rule bodies into CLAUDE.md, grouped by source file.
+#                Frontmatter is stripped; an optional `description` is shown
+#                as an italic line under the heading. (Original behavior.)
+#
+#   rule-files   Reference each rule from CLAUDE.md via Claude Code's `@path`
+#                memory-import syntax (one `@.claude/rules/<name>.md` line per
+#                rule). The per-rule files themselves are written by
+#                sync-rules.sh, so Claude Code loads each rule with the same
+#                priority as CLAUDE.md.
+#
+# Skips rules/*.md with basename README.
 #
 # Usage:
 #   sync-agent-guidelines.sh -i <source_root> -o <output_root> [--clean] [--help]
@@ -41,6 +52,14 @@ if [[ "$CLEAN" == "true" && -f "$DST" ]]; then
 fi
 
 RULES_DIR="$SRC_ROOT/rules"
+MODE="$(read_cyncia_conf claude_rules_mode claude-md)"
+case "$MODE" in
+  claude-md|rule-files) ;;
+  *)
+    echo "claude agent-guidelines: unknown claude_rules_mode='$MODE' (valid: claude-md, rule-files); falling back to claude-md" >&2
+    MODE="claude-md"
+    ;;
+esac
 
 {
   cat "$AGENTS_FILE"
@@ -48,21 +67,41 @@ RULES_DIR="$SRC_ROOT/rules"
     shopt -s nullglob
     _rf=("$RULES_DIR"/*.md)
     if [[ ${#_rf[@]} -gt 0 ]]; then
-      printf '\n\n---\n\n## Project rules (from `rules/`)\n\n'
-      while IFS= read -r f; do
-        [[ -f "$f" ]] || continue
-        base="$(basename "$f" .md)"
-        [[ "$base" == "README" ]] && continue
-        desc="$(extract_field "$f" description)"
-        printf '### `%s.md`\n\n' "$base"
-        if [[ -n "$desc" ]]; then
-          printf '_%s_\n\n' "$desc"
+      # Filter out README.md (case-sensitive basename match).
+      _kept=()
+      for _f in "${_rf[@]}"; do
+        _b="$(basename "$_f" .md)"
+        [[ "$_b" == "README" ]] && continue
+        _kept+=("$_f")
+      done
+      if [[ ${#_kept[@]} -gt 0 ]]; then
+        if [[ "$MODE" == "rule-files" ]]; then
+          printf '\n\n---\n\n## Project rules (from `rules/`)\n\n'
+          while IFS= read -r f; do
+            base="$(basename "$f" .md)"
+            printf '@.claude/rules/%s.md\n' "$base"
+          done < <(printf '%s\n' "${_kept[@]}" | LC_ALL=C sort)
+          printf '\n'
+        else
+          printf '\n\n---\n\n## Project rules (from `rules/`)\n\n'
+          while IFS= read -r f; do
+            base="$(basename "$f" .md)"
+            desc="$(extract_field "$f" description)"
+            printf '### `%s.md`\n\n' "$base"
+            if [[ -n "$desc" ]]; then
+              printf '_%s_\n\n' "$desc"
+            fi
+            strip_frontmatter "$f"
+            printf '\n\n'
+          done < <(printf '%s\n' "${_kept[@]}" | LC_ALL=C sort)
         fi
-        strip_frontmatter "$f"
-        printf '\n\n'
-      done < <(printf '%s\n' "${_rf[@]}" | LC_ALL=C sort)
+      fi
     fi
   fi
 } > "$DST"
 
-echo "claude agent-guidelines -> $DST (AGENTS.md + rules/*.md)"
+if [[ "$MODE" == "rule-files" ]]; then
+  echo "claude agent-guidelines -> $DST (AGENTS.md + @-imports for rules/*.md; mode=rule-files)"
+else
+  echo "claude agent-guidelines -> $DST (AGENTS.md + rules/*.md)"
+fi

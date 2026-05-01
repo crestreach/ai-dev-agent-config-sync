@@ -257,6 +257,70 @@ mcp_csv_to_copilot_tools_list() {
   echo "[${joined%, }]"
 }
 
+# read_cyncia_conf <key> [default]
+#   Read a scalar value from the cyncia config file. Search order:
+#     1. $CYNCIA_CONF (if set and the file exists)
+#     2. $cyncia_dir/cyncia.conf, where $cyncia_dir is the parent of the
+#        directory holding common.sh's parent — i.e.
+#        <scripts_parent>/../cyncia.conf. This resolves to
+#        .cyncia/cyncia.conf in the canonical installed layout (common.sh at
+#        .cyncia/scripts/common/common.sh) and to <repo>/cyncia.conf in the
+#        repo-clone layout used by self-tests (common.sh at
+#        scripts/common/common.sh).
+#   The file is parsed as a tiny flat YAML: lines of the form
+#     key: value
+#   Comments (#…) and blank lines are ignored. Surrounding quotes are stripped.
+#   When the key is missing, prints the optional <default> (or empty).
+read_cyncia_conf() {
+  local key="$1" default="${2:-}"
+  local conf=""
+  if [[ -n "${CYNCIA_CONF:-}" && -f "$CYNCIA_CONF" ]]; then
+    conf="$CYNCIA_CONF"
+  else
+    local common_dir scripts_dir cyncia_dir
+    common_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    scripts_dir="$(dirname "$common_dir")"
+    cyncia_dir="$(dirname "$scripts_dir")"
+    if [[ -f "$cyncia_dir/cyncia.conf" ]]; then
+      conf="$cyncia_dir/cyncia.conf"
+    fi
+  fi
+  if [[ -z "$conf" ]]; then
+    printf '%s' "$default"
+    return 0
+  fi
+  local value
+  value="$(awk -v key="$key" '
+    BEGIN { found = 0 }
+    {
+      line = $0
+      sub(/#.*$/, "", line)
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line == "") next
+      p = index(line, ":")
+      if (p == 0) next
+      k = substr(line, 1, p-1)
+      v = substr(line, p+1)
+      sub(/[[:space:]]+$/, "", k)
+      sub(/^[[:space:]]+/, "", v)
+      sub(/[[:space:]]+$/, "", v)
+      if (k != key) next
+      gsub(/^"|"$/, "", v)
+      gsub(/^'\''|'\''$/, "", v)
+      print v
+      found = 1
+      exit
+    }
+    END { if (!found) exit 1 }
+  ' "$conf" 2>/dev/null)" || value=""
+  if [[ -z "$value" ]]; then
+    printf '%s' "$default"
+  else
+    printf '%s' "$value"
+  fi
+}
+
 # sync_items <src_dir> <file|dir> <handler_fn>
 #   Iterates items (top-level files or subdirectories) under src_dir.
 #   file mode: picks *.md and uses the basename without .md (README.md is ignored).

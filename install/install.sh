@@ -245,6 +245,208 @@ while IFS= read -r _line; do
   [[ -n "$_line" ]] && echo "      $_line"
 done <<<"$VERSION_TEXT"
 
+# --- 2c. cyncia.conf (project-level cyncia configuration) -------------------
+#
+# A tiny flat YAML file at $CYNCIA_DIR/cyncia.conf, used by the sync scripts.
+# We carry the schema in the installer (so a newer installer knows about
+# properties that older configs don't). Each entry is "key|default|description".
+# The installer:
+#   * creates the file from the schema when it is missing,
+#   * leaves an existing file alone, but
+#       - asks (default YES) before adding properties newly introduced in this
+#         version of cyncia (i.e. in the schema but missing from the file),
+#       - asks (default NO) before removing properties that are no longer in
+#         the schema (i.e. in the file but missing from the schema).
+
+CYNCIA_CONF_SCHEMA=(
+  "claude_rules_mode|claude-md|How rules/<name>.md is emitted for Claude Code: 'claude-md' merges rule bodies into CLAUDE.md (default); 'rule-files' writes one file per rule to .claude/rules/<name>.md and imports them from CLAUDE.md via @-imports so Claude loads them with the same priority as CLAUDE.md."
+)
+
+CONF_PATH="$CYNCIA_DIR/cyncia.conf"
+
+# Lower-case ASCII fold without `${var,,}` (so we keep bash 3.2 portability,
+# which macOS still ships).
+_lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+# Print 0/1 lines: 1 if the file already declares <key>, 0 otherwise.
+# Tolerates leading whitespace, comments and surrounding quotes on the value.
+_conf_has_key() {
+  local file="$1" key="$2"
+  awk -v key="$key" '
+    BEGIN { found = 0 }
+    {
+      line = $0
+      sub(/#.*$/, "", line)
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line == "") next
+      p = index(line, ":")
+      if (p == 0) next
+      k = substr(line, 1, p-1)
+      sub(/[[:space:]]+$/, "", k)
+      if (k == key) { found = 1; exit }
+    }
+    END { print found ? 1 : 0 }
+  ' "$file"
+}
+
+# Print every key declared in the file (one per line, in source order).
+_conf_keys() {
+  local file="$1"
+  awk '
+    {
+      line = $0
+      sub(/#.*$/, "", line)
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (line == "") next
+      p = index(line, ":")
+      if (p == 0) next
+      k = substr(line, 1, p-1)
+      sub(/[[:space:]]+$/, "", k)
+      if (k != "") print k
+    }
+  ' "$file"
+}
+
+# Append a default entry for <key> with description and value to the file.
+_conf_append_default() {
+  local file="$1" key="$2" default="$3" description="$4"
+  {
+    printf '\n'
+    # Wrap long descriptions at ~76 chars, prefixing each line with "# ".
+    printf '%s\n' "$description" | awk '
+      {
+        n = split($0, words, /[[:space:]]+/)
+        line = "#"
+        for (i = 1; i <= n; i++) {
+          if (words[i] == "") continue
+          tentative = line " " words[i]
+          if (length(tentative) > 78 && line != "#") {
+            print line
+            line = "# " words[i]
+          } else {
+            line = (line == "#") ? "# " words[i] : line " " words[i]
+          }
+        }
+        if (line != "#") print line
+      }
+    '
+    printf '%s: %s\n' "$key" "$default"
+  } >> "$file"
+}
+
+# Remove every line that declares <key>: ... (preserves blank lines and
+# comments around it).
+_conf_remove_key() {
+  local file="$1" key="$2"
+  local tmp="$file.tmp"
+  awk -v key="$key" '
+    {
+      line = $0
+      stripped = $0
+      sub(/#.*$/, "", stripped)
+      sub(/^[[:space:]]+/, "", stripped)
+      sub(/[[:space:]]+$/, "", stripped)
+      if (stripped == "") { print; next }
+      p = index(stripped, ":")
+      if (p == 0) { print; next }
+      k = substr(stripped, 1, p-1)
+      sub(/[[:space:]]+$/, "", k)
+      if (k == key) next
+      print line
+    }
+  ' "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
+# ask_yes_no_default <prompt> <default-yes|default-no>
+#   Like ask_yes_no, but with an explicit default for non-interactive mode.
+ask_yes_no_default() {
+  local prompt="$1" default="$2"
+  case "$INTERACTIVE_MODE" in
+    yes) echo "  [bootstrap] $prompt -> yes"; return 0 ;;
+    no)  echo "  [no-bootstrap] $prompt -> no";  return 1 ;;
+  esac
+  if ! ( exec </dev/tty ) 2>/dev/null; then
+    if [[ "$default" == "default-yes" ]]; then
+      echo "  (no TTY) $prompt -> yes (default)"
+      return 0
+    else
+      echo "  (no TTY) $prompt -> no (default)"
+      return 1
+    fi
+  fi
+  local reply hint
+  if [[ "$default" == "default-yes" ]]; then hint="[Y/n]"; else hint="[y/N]"; fi
+  read -r -p "  $prompt $hint " reply </dev/tty || reply=""
+  if [[ "$default" == "default-yes" ]]; then
+    [[ -z "$reply" || "$(_lower "$reply")" =~ ^y(es)?$ ]]
+  else
+    [[ "$(_lower "$reply")" =~ ^y(es)?$ ]]
+  fi
+}
+
+if [[ ! -f "$CONF_PATH" ]]; then
+  echo "==> Creating $CONF_PATH (defaults)"
+  {
+    printf '# cyncia configuration. See %s/README.md for details.\n' "$CYNCIA_DIR"
+    printf '#\n'
+    printf '# This file is read by the sync scripts at run time. The installer\n'
+    printf '# leaves an existing file alone, prompts before adding new properties\n'
+    printf '# introduced by future versions, and prompts before removing\n'
+    printf '# properties that are no longer supported.\n'
+  } > "$CONF_PATH"
+  for entry in "${CYNCIA_CONF_SCHEMA[@]}"; do
+    IFS='|' read -r _ck _cd _cdesc <<< "$entry"
+    _conf_append_default "$CONF_PATH" "$_ck" "$_cd" "$_cdesc"
+  done
+  echo "    wrote $CONF_PATH"
+else
+  echo "==> Keeping existing $CONF_PATH (will reconcile against current schema)"
+
+  # Pass 1: add properties that are in the schema but missing from the file.
+  for entry in "${CYNCIA_CONF_SCHEMA[@]}"; do
+    IFS='|' read -r _ck _cd _cdesc <<< "$entry"
+    if [[ "$(_conf_has_key "$CONF_PATH" "$_ck")" == "0" ]]; then
+      echo
+      echo "  New cyncia.conf property in this version: $_ck (default: $_cd)"
+      echo "    $_cdesc"
+      if ask_yes_no_default \
+           "Add '$_ck: $_cd' to $CONF_PATH?" default-yes; then
+        _conf_append_default "$CONF_PATH" "$_ck" "$_cd" "$_cdesc"
+        echo "    added $_ck=$_cd"
+      else
+        echo "    skipped $_ck (sync scripts will use the built-in default: $_cd)"
+      fi
+    fi
+  done
+
+  # Pass 2: remove properties present in the file but not in the schema.
+  schema_keys=()
+  for entry in "${CYNCIA_CONF_SCHEMA[@]}"; do
+    IFS='|' read -r _ck _ _ <<< "$entry"
+    schema_keys+=("$_ck")
+  done
+  while IFS= read -r existing_key; do
+    [[ -z "$existing_key" ]] && continue
+    in_schema="no"
+    for sk in "${schema_keys[@]+"${schema_keys[@]}"}"; do
+      if [[ "$sk" == "$existing_key" ]]; then in_schema="yes"; break; fi
+    done
+    if [[ "$in_schema" == "no" ]]; then
+      echo
+      echo "  Property in $CONF_PATH that is no longer supported by cyncia: $existing_key"
+      if ask_yes_no_default \
+           "Remove '$existing_key' from $CONF_PATH?" default-no; then
+        _conf_remove_key "$CONF_PATH" "$existing_key"
+        echo "    removed $existing_key"
+      else
+        echo "    kept $existing_key (sync scripts will ignore it)"
+      fi
+    fi
+  done < <(_conf_keys "$CONF_PATH" | awk '!seen[$0]++')
+fi
+
 # --- 3. Skills bootstrap (copy / update <config-dir>/skills) -----------------
 
 # Classify each skill in $CYNCIA_DIR/skills as "new" (not present in

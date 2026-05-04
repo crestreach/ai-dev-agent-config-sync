@@ -25,7 +25,7 @@ if ($Clean) {
 $escapeTomlString = {
   param([AllowNull()][object]$Value)
   $s = if ($null -eq $Value) { '' } else { [string]$Value }
-  $s = $s -replace '\\','\\'
+  $s = $s.Replace('\', '\\')
   $s = $s -replace '"','\"'
   $s = $s -replace "`r",'\r'
   $s = $s -replace "`n",'\n'
@@ -36,7 +36,7 @@ $escapeTomlString = {
 $escapeMultilineBasicBody = {
   param([string[]]$Lines)
   return ($Lines | ForEach-Object {
-    ($_ -replace '\\','\\') -replace '"""','\"\"\"'
+    ($_.Replace('\', '\\')) -replace '"""','\"\"\"'
   })
 }.GetNewClosure()
 

@@ -215,7 +215,7 @@ function global:Get-JsonPropertyValue {
 function global:ConvertTo-TomlString {
   param([AllowNull()][object]$Value)
   $s = if ($null -eq $Value) { '' } else { [string]$Value }
-  $s = $s -replace '\\','\\'
+  $s = $s.Replace('\', '\\')
   $s = $s -replace '"','\"'
   $s = $s -replace "`r",'\r'
   $s = $s -replace "`n",'\n'

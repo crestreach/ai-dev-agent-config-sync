@@ -22,12 +22,12 @@ $dst = Join-Path $outRoot '.codex\config.toml'
 New-Item -ItemType Directory -Force -Path (Split-Path $dst) | Out-Null
 
 function Test-CodexMcpEnabled {
-  $value = (Get-CynciaConfValue -Key 'codex_sync_mcp' -Default 'true').ToLowerInvariant()
+  $value = (Get-CynciaConfValue -Key 'codex-sync-mcp' -Default 'true').ToLowerInvariant()
   switch ($value) {
     { $_ -in @('true','yes','y','1','on') } { return $true }
     { $_ -in @('false','no','n','0','off') } { return $false }
     default {
-      Write-Warning "codex mcp: unknown codex_sync_mcp='$value' (valid: true, false); falling back to true"
+      Write-Warning "codex mcp: unknown codex-sync-mcp='$value' (valid: true, false); falling back to true"
       return $true
     }
   }
@@ -89,7 +89,7 @@ function Add-CodexMcpToml {
 }
 
 if (-not (Test-CodexMcpEnabled)) {
-  Write-Host 'codex mcp: skipped (codex_sync_mcp=false)'
+  Write-Host 'codex mcp: skipped (codex-sync-mcp=false)'
   return
 }
 

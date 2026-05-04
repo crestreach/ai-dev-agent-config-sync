@@ -14,7 +14,7 @@
 #                  Each subscript is skipped when its source dir is absent.
 #   <output_root>  Project root where tool-specific files are written (.cursor, …)
 #                  Each sync-agent-guidelines copies AGENTS.md here when i≠o.
-#   --tools        Comma-separated tool list. Defaults to the `default_tools`
+#   --tools        Comma-separated tool list. Defaults to the `default-tools`
 #                  value in cyncia.conf, or all supported tools when unset.
 #   --clean        Forwarded to every per-tool script: clear that script’s
 #                  output location(s) before writing (default: off). See each
@@ -77,7 +77,7 @@ if [[ ! -f "$AGENTS_FILE" ]]; then
 fi
 
 if [[ -z "$TOOLS" ]]; then
-  TOOLS="$(read_cyncia_conf default_tools "$DEFAULT_TOOLS")"
+  TOOLS="$(read_cyncia_conf default-tools "$DEFAULT_TOOLS")"
 fi
 
 IFS=',' read -r -a TOOL_LIST <<< "$TOOLS"

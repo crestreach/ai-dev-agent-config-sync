@@ -31,12 +31,12 @@ Copy-AgentsMdBetweenRoots -SourceRoot $srcRoot -OutputRoot $outRoot
 Write-Host "codex agent-guidelines -> $dst"
 
 function Test-CodexRulesOverrideEnabled {
-  $value = (Get-CynciaConfValue -Key 'codex_rules_to_agents_override' -Default 'true').ToLowerInvariant()
+  $value = (Get-CynciaConfValue -Key 'codex-rules-mode' -Default 'agents-override').ToLowerInvariant()
   switch ($value) {
-    { $_ -in @('true','yes','y','1','on') } { return $true }
-    { $_ -in @('false','no','n','0','off') } { return $false }
+    'agents-override' { return $true }
+    'ignore' { return $false }
     default {
-      Write-Warning "codex agent-guidelines: unknown codex_rules_to_agents_override='$value' (valid: true, false); falling back to true"
+      Write-Warning "codex agent-guidelines: unknown codex-rules-mode='$value' (valid: agents-override, ignore); falling back to agents-override"
       return $true
     }
   }
@@ -46,9 +46,9 @@ $overrideDst = Join-Path $outRoot 'AGENTS.override.md'
 if (-not (Test-CodexRulesOverrideEnabled)) {
   if ($Clean -and (Test-Path -LiteralPath $overrideDst -PathType Leaf)) {
     Remove-Item -LiteralPath $overrideDst -Force
-    Write-Host "codex agent-guidelines: removed $overrideDst (-Clean; codex_rules_to_agents_override=false)"
+    Write-Host "codex agent-guidelines: removed $overrideDst (-Clean; codex-rules-mode=ignore)"
   } else {
-    Write-Host 'codex agent-guidelines: skipped AGENTS.override.md (codex_rules_to_agents_override=false)'
+    Write-Host 'codex agent-guidelines: skipped AGENTS.override.md (codex-rules-mode=ignore)'
   }
   return
 }

@@ -29,7 +29,7 @@ For each selected tool, `sync-all` writes:
 | `copilot` | `.github/copilot-instructions.md`, `.github/{agents,skills,instructions}/` |
 | `vscode` | `.vscode/mcp.json` (also read by Copilot Chat in VS Code) |
 | `junie` | `.junie/AGENTS.md` (AGENTS + rules merged), `.junie/{agents,skills}/` |
-| `codex` | `AGENTS.md` (copy), `AGENTS.override.md` when `codex_rules_to_agents_override=true`, `.codex/agents/*.toml`, `.agents/skills/`, `.codex/config.toml` `mcp_servers` tables when `codex_sync_mcp=true` |
+| `codex` | `AGENTS.md` (copy), `AGENTS.override.md` when `codex-rules-mode=agents-override`, `.codex/agents/*.toml`, `.agents/skills/`, `.codex/config.toml` `mcp_servers` tables when `codex-sync-mcp=true` |
 
 `sync-agent-guidelines` always emits the **full** `AGENTS.md` / `CLAUDE.md` / `.junie/AGENTS.md` — `--items` does not trim it. Claude and Junie have no per-rule files by default (rules are appended into the guidelines file). Codex does not generate `.codex/rules` from Cyncia Markdown rules because Codex `.rules` files are Starlark command policy; by default, Codex Markdown rule bodies are merged into root `AGENTS.override.md` instead.
 
@@ -92,11 +92,11 @@ The project root where `.cursor/`, `.claude/`, `.github/`, `.junie/`, `.codex/`,
 
 ### `--tools` / `-Tools` (optional; default from config)
 
-Comma-separated subset of `cursor,claude,copilot,vscode,junie,codex` (case-insensitive, no spaces). If omitted, `sync-all` uses `default_tools` from `.cyncia/cyncia.conf`; if that property is missing, the built-in default is all six supported tools.
+Comma-separated subset of `cursor,claude,copilot,vscode,junie,codex` (case-insensitive, no spaces). If omitted, `sync-all` uses `default-tools` from `.cyncia/cyncia.conf`; if that property is missing, the built-in default is all six supported tools.
 
 | Phrase | Value |
 |--------|-------|
-| "all tools", "everything", no tool mentioned | omit flag (uses `default_tools`; built-in default all six) |
+| "all tools", "everything", no tool mentioned | omit flag (uses `default-tools`; built-in default all six) |
 | "only Cursor" | `cursor` |
 | "Cursor and Claude", "not Copilot, not Junie" | `cursor,claude` |
 | "skip Junie" | `cursor,claude,copilot,vscode,codex` |
@@ -167,7 +167,7 @@ On non-zero exit, surface the error and suggest fixes (missing dirs, unknown too
 
 Reply with a **compact** summary, not the full log:
 
-1. **Command** — one line: OS/shell, script path, effective `-i`/`-o`/`--tools`/`--items`/`--clean`. If `--tools` was omitted and `default_tools` is visible, mention the configured default that was used.
+1. **Command** — one line: OS/shell, script path, effective `-i`/`-o`/`--tools`/`--items`/`--clean`. If `--tools` was omitted and `default-tools` is visible, mention the configured default that was used.
 2. **Deletions / clean** — list paths from log lines matching `cleaned` / `removed` / `Clean`. If `--clean` was not used, state that no clean step ran (overwrite in place only).
 3. **Generated / updated** — from lines with `->` (e.g. `cursor agent ->`, `copilot skill ->`) and `== tool ==` headers. Group by tool. Call out `AGENTS.md`, `AGENTS.override.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.junie/AGENTS.md`, `.codex/config.toml`, and `.codex/agents/*.toml` when they appear.
 4. **Basis** — one short sentence explaining what you inferred from the user's request.

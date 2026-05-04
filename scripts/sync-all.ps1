@@ -13,7 +13,7 @@
   Project root where tool-specific files are written. Each
   sync-agent-guidelines run copies AGENTS.md when input≠output.
 .PARAMETER Tools
-  Comma-separated list. Defaults to the default_tools value in cyncia.conf,
+  Comma-separated list. Defaults to the default-tools value in cyncia.conf,
   or all supported tools when unset.
 .PARAMETER Items
   Comma-separated list forwarded to agents, skills, and rules (ignored by
@@ -51,7 +51,7 @@ if (-not (Test-Path -LiteralPath $agentsFile -PathType Leaf)) {
 }
 
 if (-not $Tools) {
-  $Tools = Get-CynciaConfValue -Key 'default_tools' -Default 'cursor,claude,copilot,vscode,junie,codex'
+  $Tools = Get-CynciaConfValue -Key 'default-tools' -Default 'cursor,claude,copilot,vscode,junie,codex'
 }
 
 $itemArgs = @{}

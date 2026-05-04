@@ -23,7 +23,7 @@ GitHub Copilot, VS Code, Junie, Codex) and the artifact types this repo syncs:
 | Claude Code | `CLAUDE.md` (root) | Writes from `<source_root>/AGENTS.md` + merged `rules/*.md` |
 | GitHub Copilot | `.github/copilot-instructions.md` | Copies from `<source_root>/AGENTS.md` |
 | Junie | `.junie/AGENTS.md` | Writes from `<source_root>/AGENTS.md` + merged `rules/*.md` |
-| Codex | `AGENTS.md` and `AGENTS.override.md` (root) | Copies `<source_root>/AGENTS.md` → `<output_root>/AGENTS.md` when roots differ; when `codex_rules_to_agents_override: true`, writes `AGENTS.override.md` from `AGENTS.md` + merged `rules/*.md` |
+| Codex | `AGENTS.md` and `AGENTS.override.md` (root) | Copies `<source_root>/AGENTS.md` → `<output_root>/AGENTS.md` when roots differ; when `codex-rules-mode: agents-override`, writes `AGENTS.override.md` from `AGENTS.md` + merged `rules/*.md` |
 
 ## Rules
 
@@ -33,7 +33,7 @@ GitHub Copilot, VS Code, Junie, Codex) and the artifact types this repo syncs:
 | GitHub Copilot | `.github/instructions/<name>.instructions.md` | Generates from `rules/<name>.md` (frontmatter → `applyTo` + body) |
 | Claude Code | *(none)* | Merges rule bodies into `CLAUDE.md` |
 | Junie | *(none)* | Merges rule bodies into `.junie/AGENTS.md` |
-| Codex | *(no `.codex/rules` file)* | Codex `.rules` files are Starlark command policy, not Markdown guidance; generic rule bodies are merged into root `AGENTS.override.md` when `codex_rules_to_agents_override: true` |
+| Codex | *(no `.codex/rules` file)* | Codex `.rules` files are Starlark command policy, not Markdown guidance; generic rule bodies are merged into root `AGENTS.override.md` when `codex-rules-mode: agents-override` |
 
 **Rule field mapping (as implemented by the scripts):**
 

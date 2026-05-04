@@ -26,15 +26,15 @@ The sync scripts write tool-specific files under your **output root**:
 |---|---|---|---|---|---|---|
 | `agents/<name>.md` | `.cursor/agents/<name>.md` | `.claude/agents/<name>.md` | `.github/agents/<name>.md` | *(no file)* | `.junie/agents/<name>.md` | `.codex/agents/<name>.toml` |
 | `skills/<name>/…` | `.cursor/skills/<name>/…` | `.claude/skills/<name>/…` | `.github/skills/<name>/…` | *(no file)* | `.junie/skills/<name>/…` | `.agents/skills/<name>/…` |
-| `rules/<name>.md` | `.cursor/rules/<name>.mdc` | *(not generated)* | `.github/instructions/<name>.instructions.md` | *(no file)* | *(not generated)* | `AGENTS.override.md` (when `codex_rules_to_agents_override: true`) |
+| `rules/<name>.md` | `.cursor/rules/<name>.mdc` | *(not generated)* | `.github/instructions/<name>.instructions.md` | *(no file)* | *(not generated)* | `AGENTS.override.md` (when `codex-rules-mode: agents-override`) |
 | `mcp-servers/<name>.json` | `.cursor/mcp.json` | `.mcp.json` (project root) | *(no file — `.vscode/mcp.json` is written by the **vscode** tool)* | `.vscode/mcp.json` (+ `inputs[]`) | *(stdout snippet only — no file)* | `.codex/config.toml` (`mcp_servers` tables only) |
 | `AGENTS.md` | `AGENTS.md` (copied to output root when source root ≠ output root) | `CLAUDE.md` (generated from `AGENTS.md` + `rules/*.md`) | `.github/copilot-instructions.md` (copied from `AGENTS.md`) | *(no file)* | `.junie/AGENTS.md` (generated from `AGENTS.md` + `rules/*.md`) | `AGENTS.md` (Codex project guidance) plus `AGENTS.override.md` when Codex rules are enabled |
 
 Notes:
 
-- **Claude rules:** with `claude_rules_mode: claude-md` (the default in `cyncia.conf`), rule bodies are appended into `CLAUDE.md` by `sync-agent-guidelines`. With `claude_rules_mode: rule-files`, each rule is written to `.claude/rules/<n>.md` by `sync-rules` and imported from `CLAUDE.md` via `@.claude/rules/<n>.md` memory-imports.
+- **Claude rules:** with `claude-rules-mode: claude-md` (the default in `cyncia.conf`), rule bodies are appended into `CLAUDE.md` by `sync-agent-guidelines`. With `claude-rules-mode: rule-files`, each rule is written to `.claude/rules/<n>.md` by `sync-rules` and imported from `CLAUDE.md` via `@.claude/rules/<n>.md` memory-imports.
 - **Junie rules:** Junie has no per-rule file format, so rule bodies are appended into `.junie/AGENTS.md` by `sync-agent-guidelines` (and `sync-rules` remains a no-op).
-- **Codex rules:** Codex `.rules` files are Starlark command policy, so Cyncia does not generate `.codex/rules`. With `codex_rules_to_agents_override: true` (the default), Markdown rule bodies are appended into root `AGENTS.override.md`, which Codex prefers over `AGENTS.md` in the same directory.
+- **Codex rules:** Codex `.rules` files are Starlark command policy, so Cyncia does not generate `.codex/rules`. With `codex-rules-mode: agents-override` (the default), Markdown rule bodies are appended into root `AGENTS.override.md`, which Codex prefers over `AGENTS.md` in the same directory.
 
 ## Agent configuration management (cyncia)
 

@@ -110,7 +110,7 @@ TOML
   grep -q '^\[mcp_servers\."context7"\]$' "$TEST_OUT/.codex/config.toml"
 }
 
-@test "codex sync-mcp: codex_sync_mcp false leaves config.toml untouched" {
+@test "codex sync-mcp: codex-sync-mcp false leaves config.toml untouched" {
   mkdir -p "$TEST_OUT/.codex"
   cat > "$TEST_OUT/.codex/config.toml" <<'TOML'
 model = "gpt-5"
@@ -120,7 +120,7 @@ command = "existing-server"
 TOML
   cp "$TEST_OUT/.codex/config.toml" "$TEST_OUT/config.before"
   conf="$TEST_OUT/cyncia.conf"
-  echo 'codex_sync_mcp: false' > "$conf"
+  echo 'codex-sync-mcp: false' > "$conf"
   export CYNCIA_CONF="$conf"
   run bash "${REPO_ROOT}/scripts/codex/sync-mcp.sh" -i "$TEST_SRC/mcp-servers" -o "$TEST_OUT" --clean
   unset CYNCIA_CONF

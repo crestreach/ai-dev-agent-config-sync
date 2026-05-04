@@ -29,12 +29,12 @@ require_jq
 
 codex_mcp_enabled() {
   local value
-  value="$(read_cyncia_conf codex_sync_mcp true | tr '[:upper:]' '[:lower:]')"
+  value="$(read_cyncia_conf codex-sync-mcp true | tr '[:upper:]' '[:lower:]')"
   case "$value" in
     true|yes|y|1|on) return 0 ;;
     false|no|n|0|off) return 1 ;;
     *)
-      echo "codex mcp: unknown codex_sync_mcp='$value' (valid: true, false); falling back to true" >&2
+      echo "codex mcp: unknown codex-sync-mcp='$value' (valid: true, false); falling back to true" >&2
       return 0
       ;;
   esac
@@ -92,7 +92,7 @@ codex_append_mcp_toml() {
 }
 
 if ! codex_mcp_enabled; then
-  echo "codex mcp: skipped (codex_sync_mcp=false)"
+  echo "codex mcp: skipped (codex-sync-mcp=false)"
   exit 0
 fi
 

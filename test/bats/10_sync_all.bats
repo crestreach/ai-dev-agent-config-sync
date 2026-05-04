@@ -46,9 +46,9 @@ load test_helper
   [ ! -d "$TEST_OUT/.github" ]
 }
 
-@test "sync-all: default_tools from cyncia.conf controls omitted --tools" {
+@test "sync-all: default-tools from cyncia.conf controls omitted --tools" {
   conf="$TEST_OUT/cyncia.conf"
-  echo 'default_tools: codex' > "$conf"
+  echo 'default-tools: codex' > "$conf"
   export CYNCIA_CONF="$conf"
   run bash "$SYNC_ALL_SH" -i "$TEST_SRC" -o "$TEST_OUT"
   unset CYNCIA_CONF
@@ -60,9 +60,9 @@ load test_helper
   [ ! -d "$TEST_OUT/.github" ]
 }
 
-@test "sync-all: codex_rules_to_agents_override false skips AGENTS.override.md" {
+@test "sync-all: codex-rules-mode ignore skips AGENTS.override.md" {
   conf="$TEST_OUT/cyncia.conf"
-  echo 'codex_rules_to_agents_override: false' > "$conf"
+  echo 'codex-rules-mode: ignore' > "$conf"
   export CYNCIA_CONF="$conf"
   run bash "$SYNC_ALL_SH" -i "$TEST_SRC" -o "$TEST_OUT" --tools codex
   unset CYNCIA_CONF

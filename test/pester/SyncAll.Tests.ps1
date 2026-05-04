@@ -76,13 +76,13 @@ Describe 'sync-all.ps1' {
     }
   }
 
-  It 'uses default_tools from cyncia.conf when -Tools is omitted' {
+  It 'uses default-tools from cyncia.conf when -Tools is omitted' {
     $src = & $script:NewTestSourceFromFixture
     $out = & $script:NewTestOutputDir
     $oldConf = $env:CYNCIA_CONF
     try {
       $conf = Join-Path $out 'cyncia.conf'
-      Set-Content -LiteralPath $conf -Value 'default_tools: codex' -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value 'default-tools: codex' -Encoding UTF8
       $env:CYNCIA_CONF = $conf
       & $script:SyncAllPs1 -InputRoot $src -OutputRoot $out
       (Test-Path -LiteralPath (Join-Path $out '.codex\agents\one.toml')) | Should -BeTrue
@@ -95,13 +95,13 @@ Describe 'sync-all.ps1' {
     }
   }
 
-  It 'respects codex_rules_to_agents_override false' {
+  It 'respects codex-rules-mode ignore' {
     $src = & $script:NewTestSourceFromFixture
     $out = & $script:NewTestOutputDir
     $oldConf = $env:CYNCIA_CONF
     try {
       $conf = Join-Path $out 'cyncia.conf'
-      Set-Content -LiteralPath $conf -Value 'codex_rules_to_agents_override: false' -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value 'codex-rules-mode: ignore' -Encoding UTF8
       $env:CYNCIA_CONF = $conf
       & $script:SyncAllPs1 -InputRoot $src -OutputRoot $out -Tools codex
       (Test-Path -LiteralPath (Join-Path $out 'AGENTS.md')) | Should -BeTrue
@@ -298,7 +298,7 @@ Describe 'Per-tool .ps1' {
     }
   }
 
-  It 'claude\sync-rules.ps1 is a no-op when claude_rules_mode is unset (default)' {
+  It 'claude\sync-rules.ps1 is a no-op when claude-rules-mode is unset (default)' {
     $src = & $script:NewTestSourceFromFixture
     $out = & $script:NewTestOutputDir
     $r = Join-Path $script:RepoRoot 'scripts\claude\sync-rules.ps1'
@@ -311,13 +311,13 @@ Describe 'Per-tool .ps1' {
     }
   }
 
-  It 'claude\sync-rules.ps1 emits per-rule files when claude_rules_mode is rule-files' {
+  It 'claude\sync-rules.ps1 emits per-rule files when claude-rules-mode is rule-files' {
     $src = & $script:NewTestSourceFromFixture
     $out = & $script:NewTestOutputDir
     $r = Join-Path $script:RepoRoot 'scripts\claude\sync-rules.ps1'
     $conf = Join-Path $out 'cyncia.conf'
     try {
-      Set-Content -LiteralPath $conf -Value "claude_rules_mode: rule-files" -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value "claude-rules-mode: rule-files" -Encoding UTF8
       $env:CYNCIA_CONF = $conf
       & $r -InputPath (Join-Path $src 'rules') -OutputPath $out
       (Test-Path -LiteralPath (Join-Path $out '.claude\rules\ra.md')) | Should -BeTrue
@@ -339,7 +339,7 @@ Describe 'Per-tool .ps1' {
     $r = Join-Path $script:RepoRoot 'scripts\claude\sync-agent-guidelines.ps1'
     $conf = Join-Path $out 'cyncia.conf'
     try {
-      Set-Content -LiteralPath $conf -Value "claude_rules_mode: rule-files" -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value "claude-rules-mode: rule-files" -Encoding UTF8
       $env:CYNCIA_CONF = $conf
       & $r -InputPath $src -OutputPath $out
       $cl = Get-Content -LiteralPath (Join-Path $out 'CLAUDE.md') -Raw
@@ -359,7 +359,7 @@ Describe 'Per-tool .ps1' {
     $r = Join-Path $script:RepoRoot 'scripts\claude\sync-rules.ps1'
     $conf = Join-Path $out 'cyncia.conf'
     try {
-      Set-Content -LiteralPath $conf -Value "claude_rules_mode: rule-files" -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value "claude-rules-mode: rule-files" -Encoding UTF8
       $env:CYNCIA_CONF = $conf
       $rulesOut = Join-Path $out '.claude\rules'
       New-Item -ItemType Directory -Force -Path $rulesOut | Out-Null

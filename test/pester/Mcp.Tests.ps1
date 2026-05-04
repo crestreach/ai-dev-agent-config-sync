@@ -161,7 +161,7 @@ command = "old-server"
     }
   }
 
-  It 'codex: codex_sync_mcp false leaves config.toml untouched' {
+  It 'codex: codex-sync-mcp false leaves config.toml untouched' {
     $src = & $script:NewMcpSource
     $out = & $script:NewOut
     $oldConf = $env:CYNCIA_CONF
@@ -177,7 +177,7 @@ command = "existing-server"
 '@ | Set-Content -LiteralPath $configPath -Encoding UTF8
       $before = Get-Content -LiteralPath $configPath -Raw
       $conf = Join-Path $out 'cyncia.conf'
-      Set-Content -LiteralPath $conf -Value 'codex_sync_mcp: false' -Encoding UTF8
+      Set-Content -LiteralPath $conf -Value 'codex-sync-mcp: false' -Encoding UTF8
       $env:CYNCIA_CONF = $conf
 
       & (& $script:McpScript 'codex') -InputPath (Join-Path $src 'mcp-servers') -OutputPath $out -Clean

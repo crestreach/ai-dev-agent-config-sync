@@ -33,12 +33,12 @@ echo "codex agent-guidelines -> $OUTPUT_DIR/AGENTS.md"
 
 rules_override_enabled() {
   local value
-  value="$(read_cyncia_conf codex_rules_to_agents_override true | tr '[:upper:]' '[:lower:]')"
+  value="$(read_cyncia_conf codex-rules-mode agents-override | tr '[:upper:]' '[:lower:]')"
   case "$value" in
-    true|yes|y|1|on) return 0 ;;
-    false|no|n|0|off) return 1 ;;
+    agents-override) return 0 ;;
+    ignore) return 1 ;;
     *)
-      echo "codex agent-guidelines: unknown codex_rules_to_agents_override='$value' (valid: true, false); falling back to true" >&2
+      echo "codex agent-guidelines: unknown codex-rules-mode='$value' (valid: agents-override, ignore); falling back to agents-override" >&2
       return 0
       ;;
   esac
@@ -48,9 +48,9 @@ OVERRIDE_DST="$OUTPUT_DIR/AGENTS.override.md"
 if ! rules_override_enabled; then
   if [[ "$CLEAN" == "true" && -f "$OVERRIDE_DST" ]]; then
     rm -f "$OVERRIDE_DST"
-    echo "codex agent-guidelines: removed $OVERRIDE_DST (--clean; codex_rules_to_agents_override=false)"
+    echo "codex agent-guidelines: removed $OVERRIDE_DST (--clean; codex-rules-mode=ignore)"
   else
-    echo "codex agent-guidelines: skipped AGENTS.override.md (codex_rules_to_agents_override=false)"
+    echo "codex agent-guidelines: skipped AGENTS.override.md (codex-rules-mode=ignore)"
   fi
   exit 0
 fi

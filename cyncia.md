@@ -96,7 +96,7 @@ your-repo/
 ├── .agents/              # generated Codex skills
 ├── .vscode/mcp.json      # generated (when mcp-servers/ exists)
 ├── AGENTS.md             # generated (copy of .agent-config/AGENTS.md)
-├── AGENTS.override.md    # generated for Codex rules when enabled
+├── AGENTS.override.md    # generated for Codex rules when codex-rules-mode=agents-override
 └── CLAUDE.md             # generated
 ```
 
@@ -146,9 +146,9 @@ always-apply: false              # optional; true = always on (overrides applies
 |----------------|------|--------|
 | Cursor | `.cursor/rules/<name>.mdc` | `description`, optional `globs` from `applies-to`, `alwaysApply` from `always-apply` (default `false` if not exactly `true`). |
 | GitHub Copilot | `.github/instructions/<name>.instructions.md` | `applyTo`: `**` if `always-apply: true`; else `applies-to` if set; else `**` (see resolution below). |
-| Claude Code | `.claude/rules/<name>.md` *(only when `claude_rules_mode: rule-files` in `cyncia.conf`)* | Default `claude-md` mode merges rule bodies into `CLAUDE.md` via `sync-agent-guidelines`. With `rule-files`, each rule is written to its own file (frontmatter stripped) and referenced from `CLAUDE.md` via Claude Code's `@.claude/rules/<name>.md` memory-import syntax, so it loads with the same priority as `CLAUDE.md`. |
+| Claude Code | `.claude/rules/<name>.md` *(only when `claude-rules-mode: rule-files` in `cyncia.conf`)* | Default `claude-md` mode merges rule bodies into `CLAUDE.md` via `sync-agent-guidelines`. With `rule-files`, each rule is written to its own file (frontmatter stripped) and referenced from `CLAUDE.md` via Claude Code's `@.claude/rules/<name>.md` memory-import syntax, so it loads with the same priority as `CLAUDE.md`. |
 | Junie | *(no per-rule file)* | Bodies are merged into `.junie/AGENTS.md` via `sync-agent-guidelines`. |
-| Codex | `AGENTS.override.md` *(when `codex_rules_to_agents_override: true`, the default)* | Codex native `.rules` files are Starlark command execution policy, not Markdown instruction snippets. Cyncia does not generate `.codex/rules`; instead, generic Markdown rule bodies are merged into root `AGENTS.override.md`, which Codex prefers over `AGENTS.md` in the same directory. Keep Codex command policy under `.codex/rules/*.rules` by hand. |
+| Codex | `AGENTS.override.md` *(when `codex-rules-mode: agents-override`, the default)* | Codex native `.rules` files are Starlark command execution policy, not Markdown instruction snippets. Cyncia does not generate `.codex/rules`; instead, generic Markdown rule bodies are merged into root `AGENTS.override.md`, which Codex prefers over `AGENTS.md` in the same directory. Keep Codex command policy under `.codex/rules/*.rules` by hand. |
 
 **Copilot `applyTo` resolution** (implemented in `scripts/copilot/sync-rules.{sh,ps1}`):
 
@@ -345,7 +345,7 @@ Per-tool scripts:
 `sync-all` adds:
 
 - `--tools cursor,claude,copilot,vscode,junie,codex` / `-Tools ...`; when omitted,
-  `sync-all` uses `default_tools` from `.cyncia/cyncia.conf` (built-in default:
+  `sync-all` uses `default-tools` from `.cyncia/cyncia.conf` (built-in default:
   all six supported tools).
 - `--clean` / `-Clean` is forwarded to **every** per-tool script in the run (same
   semantics as above).
@@ -354,7 +354,7 @@ The Claude and Junie **`sync-rules`** scripts are no-ops in their default modes
 (rules are merged in `sync-agent-guidelines`). Codex **`sync-rules`** is also a
 no-op because Codex `.rules` files are command policy, not Markdown guidance;
 Codex Markdown rule guidance is handled by `sync-agent-guidelines` when
-`codex_rules_to_agents_override` is enabled. They accept `--clean` for a
+`codex-rules-mode` is `agents-override`. They accept `--clean` for a
 uniform CLI but perform no deletions.
 
 ### Examples — macOS / Linux
@@ -635,10 +635,10 @@ Currently supported properties:
 
 | Key | Default | Values | Effect |
 |---|---|---|---|
-| `claude_rules_mode` | `claude-md` | `claude-md`, `rule-files` | How `rules/<n>.md` is emitted for Claude Code. `claude-md` merges every rule body into `CLAUDE.md` (the previous behavior; `scripts/claude/sync-rules.{sh,ps1}` is a no-op). `rule-files` writes each rule to `.claude/rules/<n>.md` (frontmatter stripped) and references it from `CLAUDE.md` via Claude Code's `@`-import syntax (`@.claude/rules/<n>.md`), so each rule is loaded by Claude Code with the same priority as `CLAUDE.md`. Unknown values fall back to `claude-md` with a warning. |
-| `codex_rules_to_agents_override` | `true` | `true`, `false` | Whether Codex Markdown rule guidance is merged into root `AGENTS.override.md`. Codex prefers `AGENTS.override.md` over `AGENTS.md` in the same directory; `.codex/AGENTS.override.md` is not a documented project-doc location. |
-| `codex_sync_mcp` | `true` | `true`, `false` | Whether Codex MCP servers are synced into `.codex/config.toml`. When enabled, Cyncia updates only `mcp_servers` tables and preserves unrelated Codex config. With `--clean`, existing `mcp_servers` are replaced by the selected generated servers; without `--clean`, selected generated servers are added/updated and unrelated existing servers stay. |
-| `default_tools` | `cursor,claude,copilot,vscode,junie,codex` | comma-separated tools | Tool list used by `sync-all` when `--tools` / `-Tools` is omitted. |
+| `claude-rules-mode` | `claude-md` | `claude-md`, `rule-files` | How `rules/<n>.md` is emitted for Claude Code. `claude-md` merges every rule body into `CLAUDE.md` (the previous behavior; `scripts/claude/sync-rules.{sh,ps1}` is a no-op). `rule-files` writes each rule to `.claude/rules/<n>.md` (frontmatter stripped) and references it from `CLAUDE.md` via Claude Code's `@`-import syntax (`@.claude/rules/<n>.md`), so each rule is loaded by Claude Code with the same priority as `CLAUDE.md`. Unknown values fall back to `claude-md` with a warning. |
+| `codex-rules-mode` | `agents-override` | `agents-override`, `ignore` | How Codex Markdown rule guidance is handled. `agents-override` merges root `AGENTS.md` plus `rules/*.md` into root `AGENTS.override.md`, which Codex prefers over `AGENTS.md` in the same directory. `ignore` emits no Markdown rules for Codex. `.codex/AGENTS.override.md` is not a documented project-doc location. |
+| `codex-sync-mcp` | `true` | `true`, `false` | Whether Codex MCP servers are synced into `.codex/config.toml`. When enabled, Cyncia updates only `mcp_servers` tables and preserves unrelated Codex config. With `--clean`, existing `mcp_servers` are replaced by the selected generated servers; without `--clean`, selected generated servers are added/updated and unrelated existing servers stay. |
+| `default-tools` | `cursor,claude,copilot,vscode,junie,codex` | comma-separated tools | Tool list used by `sync-all` when `--tools` / `-Tools` is omitted. |
 
 Example:
 
@@ -647,18 +647,18 @@ Example:
 # bodies into CLAUDE.md (default); 'rule-files' writes one file per rule to
 # .claude/rules/<name>.md and imports them from CLAUDE.md via @-imports so
 # Claude loads them with the same priority as CLAUDE.md.
-claude_rules_mode: claude-md
+claude-rules-mode: claude-md
 
-# Whether rules/<name>.md bodies are merged into root AGENTS.override.md for
-# Codex. Codex prefers AGENTS.override.md over AGENTS.md in the same directory.
-codex_rules_to_agents_override: true
+# How rules/<name>.md bodies are handled for Codex: 'agents-override' merges
+# them into root AGENTS.override.md; 'ignore' emits no Markdown rules for Codex.
+codex-rules-mode: agents-override
 
 # Whether mcp-servers/<name>.json is synced into .codex/config.toml. When true,
 # Cyncia updates only mcp_servers tables and preserves unrelated Codex config.
-codex_sync_mcp: true
+codex-sync-mcp: true
 
 # Tool list used by sync-all when --tools / -Tools is omitted.
-default_tools: cursor,claude,copilot,vscode,junie,codex
+default-tools: cursor,claude,copilot,vscode,junie,codex
 ```
 
 ## License
